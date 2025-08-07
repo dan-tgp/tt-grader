@@ -1,0 +1,492 @@
+{% extends "base.html" %}
+
+{% block title %}SEO Audit Results - {{ run.domain }}{% endblock %}
+
+{% block content %}
+<!-- Small Share Button -->
+<div id="shareButton" style="position: fixed; top: 80px; right: 20px; z-index: 101;">
+    <button onclick="showSharePopup()" style="background: #3b82f6; color: white; border: none; border-radius: 6px; padding: 8px 12px; font-size: 12px; font-weight: 500; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s;" onmouseover="this.style.backgroundColor='#2563eb'" onmouseout="this.style.backgroundColor='#3b82f6'">
+        📤 Share
+    </button>
+</div>
+
+<!-- Sharing element popup (hidden by default) -->
+<div id="sharePopup" style="position: fixed; top: 80px; right: 20px; background: white; border: 2px solid #3b82f6; border-radius: 8px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 100; max-width: 400px; min-width: 320px; display: none;">
+    <div style="margin-bottom: 12px; display: flex; justify-content: between; align-items: center;">
+        <div>
+            <div style="font-weight: 600; color: #111827; margin-bottom: 4px; font-size: 16px;">📤 Share Report</div>
+            <div style="color: #6b7280; font-size: 13px;">Share with your team, clients, or on social media</div>
+        </div>
+        <button onclick="hideSharePopup()" style="background: #f3f4f6; border: none; border-radius: 4px; padding: 4px 8px; font-size: 14px; cursor: pointer; color: #6b7280; margin-left: 12px;" onmouseover="this.style.backgroundColor='#e5e7eb'" onmouseout="this.style.backgroundColor='#f3f4f6'">
+            ✕
+        </button>
+    </div>
+    
+    <!-- URL Display Field -->
+    <div style="margin-bottom: 12px;">
+        <label style="display: block; font-size: 12px; font-weight: 500; color: #374151; margin-bottom: 4px;">Shareable URL</label>
+        <div style="background: #f9fafb; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px; font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace; font-size: 11px; color: #374151; word-break: break-all; line-height: 1.4;">
+            {{ request.url }}
+        </div>
+    </div>
+    
+    <!-- Social Media Message -->
+    <div style="margin-bottom: 12px;">
+        <label style="display: block; font-size: 12px; font-weight: 500; color: #374151; margin-bottom: 4px;">Social Media Message</label>
+        <div style="background: #f9fafb; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px; font-size: 11px; color: #374151; line-height: 1.4;">
+            🔍 Check out this SEO audit of {{ run.result_count }} of 🌐 {{ run.domain }}'s titles, meta descriptions, and h1s. Average scores: 🏷️ Titles {{ "%.1f"|format(run.avg_title or 0) }}/10, 📝 Descriptions {{ "%.1f"|format(run.avg_description or 0) }}/10, 📌 H1s {{ "%.1f"|format(run.avg_h1 or 0) }}/10: {{ request.url }}
+        </div>
+    </div>
+    
+    <!-- Copy Buttons -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <button onclick="copyToClipboard('{{ request.url }}')" style="background: #3b82f6; color: white; border: none; border-radius: 6px; padding: 8px 12px; font-size: 13px; font-weight: 500; cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#2563eb'" onmouseout="this.style.backgroundColor='#3b82f6'">
+            📋 Copy Link
+        </button>
+        <button id="socialMessageBtn" style="background: #10b981; color: white; border: none; border-radius: 6px; padding: 8px 12px; font-size: 13px; font-weight: 500; cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#059669'" onmouseout="this.style.backgroundColor='#10b981'">
+            📱 Copy Message
+        </button>
+    </div>
+</div>
+
+<!-- Clean header section with favicon -->
+<div style="margin-bottom: 48px;">
+    <h1 style="font-size: 28px; font-weight: 600; margin-bottom: 4px; color: #1f2937; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;">
+        TITLE, DESCRIPTION, & H1 AUDIT
+    </h1>
+    <p style="color: #6b7280; font-size: 14px; margin: 0 0 16px 0;">a free resource from <a href="https://toptitle.ai" target="_blank" style="color: #3b82f6; text-decoration: none; font-weight: 500;">TOP&lt;TITLE&gt;</a></p>
+    
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+        <img src="https://www.google.com/s2/favicons?domain={{ run.domain }}&sz=32" 
+             alt="{{ run.domain }} favicon" 
+             style="width: 20px; height: 20px; border-radius: 3px;"
+             onerror="this.style.display='none'">
+        <p style="color: #374151; font-size: 16px; font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace; margin: 0; font-weight: 500;">
+            {{ run.domain }}
+        </p>
+    </div>
+    
+    <!-- Audit metadata - minimal -->
+    <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap; font-size: 11px; color: #9ca3af; margin-top: 8px;">
+        <span>{{ run.result_count }} pages analyzed</span>
+        <span>•</span>
+        <span>{{ 'Path:' + run.path_filter if run.path_filter else 'Path:*' }}</span>
+        <span>•</span>
+        <span>{{ run.created_at[:16] if run.created_at else 'Unknown' }}</span>
+        <span>•</span>
+        <span>{{ "%.1f"|format(run.pages_per_second or 0) }} pages/sec</span>
+    </div>
+</div>
+
+<!-- Key metrics in clean grid -->
+<div style="margin-bottom: 32px;">
+    <h2 style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #111827;">Average Scores</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px;">
+    <div style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px;">
+        <div style="color: #6b7280; font-size: 14px; font-weight: 500; margin-bottom: 4px;">🏷️ Title</div>
+        <div style="font-size: 24px; font-weight: 600; color: {% if run.avg_title and run.avg_title >= 8 %}#10b981{% elif run.avg_title and run.avg_title >= 5 %}#f59e0b{% elif run.avg_title %}#ef4444{% else %}#6b7280{% endif %};">
+            {{ "%.1f"|format(run.avg_title or 0) }}<span style="font-size: 16px; color: #6b7280; font-weight: 400;">/10</span>
+        </div>
+        <div style="color: {% if run.avg_title and run.avg_title >= 8 %}#10b981{% elif run.avg_title and run.avg_title >= 5 %}#f59e0b{% elif run.avg_title %}#ef4444{% else %}#6b7280{% endif %}; font-size: 11px; margin-top: 2px; font-weight: 500;">
+            {% if run.avg_title and run.avg_title >= 8 %}EXCELLENT{% elif run.avg_title and run.avg_title >= 5 %}NEEDS IMPROVEMENT{% elif run.avg_title %}CRITICAL{% else %}N/A{% endif %}
+        </div>
+    </div>
+    <div style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px;">
+        <div style="color: #6b7280; font-size: 14px; font-weight: 500; margin-bottom: 4px;">📝 Description</div>
+        <div style="font-size: 24px; font-weight: 600; color: {% if run.avg_description and run.avg_description >= 8 %}#10b981{% elif run.avg_description and run.avg_description >= 5 %}#f59e0b{% elif run.avg_description %}#ef4444{% else %}#6b7280{% endif %};">
+            {{ "%.1f"|format(run.avg_description or 0) }}<span style="font-size: 16px; color: #6b7280; font-weight: 400;">/10</span>
+        </div>
+        <div style="color: {% if run.avg_description and run.avg_description >= 8 %}#10b981{% elif run.avg_description and run.avg_description >= 5 %}#f59e0b{% elif run.avg_description %}#ef4444{% else %}#6b7280{% endif %}; font-size: 11px; margin-top: 2px; font-weight: 500;">
+            {% if run.avg_description and run.avg_description >= 8 %}EXCELLENT{% elif run.avg_description and run.avg_description >= 5 %}NEEDS IMPROVEMENT{% elif run.avg_description %}CRITICAL{% else %}N/A{% endif %}
+        </div>
+    </div>
+    <div style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px;">
+        <div style="color: #6b7280; font-size: 14px; font-weight: 500; margin-bottom: 4px;">📌 H1</div>
+        <div style="font-size: 24px; font-weight: 600; color: {% if run.avg_h1 and run.avg_h1 >= 8 %}#10b981{% elif run.avg_h1 and run.avg_h1 >= 5 %}#f59e0b{% elif run.avg_h1 %}#ef4444{% else %}#6b7280{% endif %};">
+            {{ "%.1f"|format(run.avg_h1 or 0) }}<span style="font-size: 16px; color: #6b7280; font-weight: 400;">/10</span>
+        </div>
+        <div style="color: {% if run.avg_h1 and run.avg_h1 >= 8 %}#10b981{% elif run.avg_h1 and run.avg_h1 >= 5 %}#f59e0b{% elif run.avg_h1 %}#ef4444{% else %}#6b7280{% endif %}; font-size: 11px; margin-top: 2px; font-weight: 500;">
+            {% if run.avg_h1 and run.avg_h1 >= 8 %}EXCELLENT{% elif run.avg_h1 and run.avg_h1 >= 5 %}NEEDS IMPROVEMENT{% elif run.avg_h1 %}CRITICAL{% else %}N/A{% endif %}
+        </div>
+    </div>
+    <div style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px;">
+        <div style="color: #6b7280; font-size: 14px; font-weight: 500; margin-bottom: 4px;">🔗 Coherence</div>
+        <div style="font-size: 24px; font-weight: 600; color: {% if run.avg_overall and run.avg_overall >= 8 %}#10b981{% elif run.avg_overall and run.avg_overall >= 5 %}#f59e0b{% elif run.avg_overall %}#ef4444{% else %}#6b7280{% endif %};">
+            {{ "%.1f"|format(run.avg_overall or 0) }}<span style="font-size: 16px; color: #6b7280; font-weight: 400;">/10</span>
+        </div>
+        <div style="color: {% if run.avg_overall and run.avg_overall >= 8 %}#10b981{% elif run.avg_overall and run.avg_overall >= 5 %}#f59e0b{% elif run.avg_overall %}#ef4444{% else %}#6b7280{% endif %}; font-size: 11px; margin-top: 2px; font-weight: 500;">
+            {% if run.avg_overall and run.avg_overall >= 8 %}EXCELLENT{% elif run.avg_overall and run.avg_overall >= 5 %}NEEDS IMPROVEMENT{% elif run.avg_overall %}CRITICAL{% else %}N/A{% endif %}
+        </div>
+    </div>
+    </div>
+    
+    <!-- Methodology link -->
+    <div style="margin-top: 24px; text-align: center;">
+        <p style="color: #6b7280; font-size: 14px; margin-bottom: 16px;">
+            Curious about the methodology? <a href="#how-it-works" style="color: #111827; text-decoration: underline;">Learn how this audit works</a>
+        </p>
+    </div>
+</div>
+
+
+
+<!-- Score Distribution Charts -->
+<div style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 24px; margin-bottom: 40px;">
+    <h2 style="font-size: 18px; font-weight: 600; margin-bottom: 32px; color: #111827;">Score Distributions</h2>
+    
+    <!-- Four Distribution Charts -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+        {% set chart_data = [
+            ('🏷️ Title Scores', 'title_score'),
+            ('📝 Description Scores', 'description_score'),
+            ('📌 H1 Scores', 'h1_score'),
+            ('🔗 Coherence Scores', 'overall_score')
+        ] %}
+        
+        {% for chart_title, score_key in chart_data %}
+        <div>
+            <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 20px; color: #374151; text-align: center;">{{ chart_title }}</h3>
+            
+            <!-- Horizontal bars container -->
+            <div style="display: flex; flex-direction: column; gap: 3px; background: white; border: 1px solid #d1d5db; border-radius: 6px; padding: 16px; position: relative;">
+                {% set distribution = run.score_distributions.get(score_key, {}) if run.score_distributions else {} %}
+                {% set max_count = distribution.values() | max if distribution else 1 %}
+                
+                {% for score in range(10, 0, -1) %}
+                {% set count = distribution.get(score, 0) %}
+                {% set width = (count / max_count * 100) if max_count > 0 and count > 0 else 0 %}
+                {% if score <= 4 %}
+                    {% set bg_color = '#ef4444' %}
+                    {% set bg_light = '#fecaca' %}
+                {% elif score <= 7 %}
+                    {% set bg_color = '#f59e0b' %}
+                    {% set bg_light = '#fed7aa' %}
+                {% else %}
+                    {% set bg_color = '#10b981' %}
+                    {% set bg_light = '#a7f3d0' %}
+                {% endif %}
+                
+                <div style="display: flex; align-items: center; height: 16px;">
+                    <!-- Score label -->
+                    <div style="width: 20px; text-align: right; margin-right: 8px;">
+                        <span style="font-size: 10px; color: {{ bg_color }}; font-weight: 500;">{{ score }}</span>
+                    </div>
+                    
+                    <!-- Bar -->
+                    <div style="flex: 1; height: 14px; position: relative;">
+                        {% if count > 0 %}
+                        <div style="background: {{ bg_color }}; height: 100%; width: {{ width }}%; border-radius: 2px; display: flex; align-items: center; justify-content: flex-end; padding-right: 4px;">
+                            <span style="color: white; font-size: 9px; font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.4);">{{ count }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+                
+                <!-- Bottom labels -->
+                <div style="display: flex; align-items: center; margin-top: 4px;">
+                    <div style="width: 28px;"></div>
+                    <div style="flex: 1; display: flex; justify-content: flex-end;">
+                        <span style="font-size: 10px; color: #6b7280;"># of Pages</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+
+<!-- Critical Pages -->
+<div style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 24px; margin-bottom: 40px;">
+    <h2 style="font-size: 18px; font-weight: 600; margin-bottom: 8px; color: #ef4444;">🚨 Critical Pages (1-4 scores)</h2>
+    <p style="color: #6b7280; font-size: 14px; margin-bottom: 20px;">These pages have critical SEO issues and require immediate attention. These optimization issues can be quickly fixed with TopTitle.ai's AI-powered recommendations - <a href="https://toptitle.ai" target="_blank" style="color: #3b82f6; text-decoration: none; font-weight: 500;">get started for free</a>.</p>
+    
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <th style="text-align: left; padding: 12px 8px; font-weight: 500; color: #6b7280; font-size: 14px;">URL</th>
+                    <th style="text-align: left; padding: 12px 8px; font-weight: 500; color: #6b7280; font-size: 14px;">🏷️ Title</th>
+                    <th style="text-align: left; padding: 12px 8px; font-weight: 500; color: #6b7280; font-size: 14px;">📝 Description</th>
+                    <th style="text-align: left; padding: 12px 8px; font-weight: 500; color: #6b7280; font-size: 14px;">📌 H1</th>
+                    <th style="text-align: left; padding: 12px 8px; font-weight: 500; color: #6b7280; font-size: 14px;">🔗 Coherence</th>
+                    <th style="text-align: left; padding: 12px 8px; font-weight: 500; color: #6b7280; font-size: 14px;">Explanation</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if run.critical_pages %}
+                {% for page in run.critical_pages[:10] %}
+                <tr style="border-bottom: 1px solid #f3f4f6;">
+                    <td style="padding: 16px 8px; vertical-align: top; max-width: 200px;">
+                        <a href="{{ page.url }}" target="_blank" style="color: #3b82f6; text-decoration: none; font-size: 13px; word-break: break-all;" title="{{ page.url }}">
+                            {{ page.url[:40] }}{% if page.url|length > 40 %}...{% endif %}
+                        </a>
+                    </td>
+                    <td style="padding: 16px 8px; vertical-align: top; max-width: 250px;">
+                        <div style="color: #111827; font-size: 13px; line-height: 1.4; margin-bottom: 6px;">{{ page.title if page.title else 'No title found' }}</div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="background: {% if page.title_score >= 8 %}#d1fae5; color: #065f46{% elif page.title_score >= 5 %}#fef3c7; color: #92400e{% else %}#fee2e2; color: #991b1b{% endif %}; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 500;">Score: {{ page.title_score }}</span>
+                            <span style="color: #6b7280; font-size: 11px;">{{ page.title|length }} chars</span>
+                        </div>
+                    </td>
+                    <td style="padding: 16px 8px; vertical-align: top; max-width: 250px;">
+                        <div style="color: #111827; font-size: 13px; line-height: 1.4; margin-bottom: 6px;">{{ page.meta_description if page.meta_description else 'No meta description' }}</div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="background: {% if page.description_score >= 8 %}#d1fae5; color: #065f46{% elif page.description_score >= 5 %}#fef3c7; color: #92400e{% else %}#fee2e2; color: #991b1b{% endif %}; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 500;">Score: {{ page.description_score }}</span>
+                            <span style="color: #6b7280; font-size: 11px;">{{ page.meta_description|length if page.meta_description else 0 }} chars</span>
+                        </div>
+                    </td>
+                    <td style="padding: 16px 8px; vertical-align: top; max-width: 200px;">
+                        <div style="color: #111827; font-size: 13px; line-height: 1.4; margin-bottom: 6px;">{{ page.h1_text if page.h1_text else 'No H1 found' }}</div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="background: {% if page.h1_score >= 8 %}#d1fae5; color: #065f46{% elif page.h1_score >= 5 %}#fef3c7; color: #92400e{% else %}#fee2e2; color: #991b1b{% endif %}; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 500;">Score: {{ page.h1_score }}</span>
+                            <span style="color: #6b7280; font-size: 11px;">{{ page.h1_text|length if page.h1_text else 0 }} chars</span>
+                        </div>
+                    </td>
+                    <td style="padding: 16px 8px; vertical-align: top; text-align: center;">
+                        <span style="background: {% if page.overall_score >= 8 %}#d1fae5; color: #065f46{% elif page.overall_score >= 5 %}#fef3c7; color: #92400e{% else %}#fee2e2; color: #991b1b{% endif %}; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 500;">Score: {{ page.overall_score }}</span>
+                    </td>
+                    <td style="padding: 16px 8px; vertical-align: top; max-width: 200px;">
+                        <div style="color: #6b7280; font-size: 12px; line-height: 1.4;">{{ page.explanation }}</div>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="6" style="padding: 40px; text-align: center; color: #6b7280; font-style: italic;">
+                        🎉 Great news! No pages found with critical scores (1-4). Your site's SEO is performing well.
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Needs Improvement Pages -->
+<div style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 24px; margin-bottom: 40px;">
+    <h2 style="font-size: 18px; font-weight: 600; margin-bottom: 8px; color: #f59e0b;">⚠️ Needs Improvement (5-7 scores)</h2>
+    <p style="color: #6b7280; font-size: 14px; margin-bottom: 20px;">These pages have moderate SEO issues and could benefit from optimization. These can be improved with TopTitle.ai's targeted recommendations - <a href="https://toptitle.ai" target="_blank" style="color: #3b82f6; text-decoration: none; font-weight: 500;">get started for free</a>.</p>
+    
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <th style="text-align: left; padding: 12px 8px; font-weight: 500; color: #6b7280; font-size: 14px;">URL</th>
+                    <th style="text-align: left; padding: 12px 8px; font-weight: 500; color: #6b7280; font-size: 14px;">🏷️ Title</th>
+                    <th style="text-align: left; padding: 12px 8px; font-weight: 500; color: #6b7280; font-size: 14px;">📝 Description</th>
+                    <th style="text-align: left; padding: 12px 8px; font-weight: 500; color: #6b7280; font-size: 14px;">📌 H1</th>
+                    <th style="text-align: left; padding: 12px 8px; font-weight: 500; color: #6b7280; font-size: 14px;">🔗 Coherence</th>
+                    <th style="text-align: left; padding: 12px 8px; font-weight: 500; color: #6b7280; font-size: 14px;">Explanation</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if run.needs_improvement_pages %}
+                {% for page in run.needs_improvement_pages[:10] %}
+                <tr style="border-bottom: 1px solid #f3f4f6;">
+                    <td style="padding: 16px 8px; vertical-align: top; max-width: 200px;">
+                        <a href="{{ page.url }}" target="_blank" style="color: #3b82f6; text-decoration: none; font-size: 13px; word-break: break-all;" title="{{ page.url }}">
+                            {{ page.url[:40] }}{% if page.url|length > 40 %}...{% endif %}
+                        </a>
+                    </td>
+                    <td style="padding: 16px 8px; vertical-align: top; max-width: 250px;">
+                        <div style="color: #111827; font-size: 13px; line-height: 1.4; margin-bottom: 6px;">{{ page.title if page.title else 'No title found' }}</div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="background: {% if page.title_score >= 8 %}#d1fae5; color: #065f46{% elif page.title_score >= 5 %}#fef3c7; color: #92400e{% else %}#fee2e2; color: #991b1b{% endif %}; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 500;">Score: {{ page.title_score }}</span>
+                            <span style="color: #6b7280; font-size: 11px;">{{ page.title|length }} chars</span>
+                        </div>
+                    </td>
+                    <td style="padding: 16px 8px; vertical-align: top; max-width: 250px;">
+                        <div style="color: #111827; font-size: 13px; line-height: 1.4; margin-bottom: 6px;">{{ page.meta_description if page.meta_description else 'No meta description' }}</div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="background: {% if page.description_score >= 8 %}#d1fae5; color: #065f46{% elif page.description_score >= 5 %}#fef3c7; color: #92400e{% else %}#fee2e2; color: #991b1b{% endif %}; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 500;">Score: {{ page.description_score }}</span>
+                            <span style="color: #6b7280; font-size: 11px;">{{ page.meta_description|length if page.meta_description else 0 }} chars</span>
+                        </div>
+                    </td>
+                    <td style="padding: 16px 8px; vertical-align: top; max-width: 200px;">
+                        <div style="color: #111827; font-size: 13px; line-height: 1.4; margin-bottom: 6px;">{{ page.h1_text if page.h1_text else 'No H1 found' }}</div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="background: {% if page.h1_score >= 8 %}#d1fae5; color: #065f46{% elif page.h1_score >= 5 %}#fef3c7; color: #92400e{% else %}#fee2e2; color: #991b1b{% endif %}; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 500;">Score: {{ page.h1_score }}</span>
+                            <span style="color: #6b7280; font-size: 11px;">{{ page.h1_text|length if page.h1_text else 0 }} chars</span>
+                        </div>
+                    </td>
+                    <td style="padding: 16px 8px; vertical-align: top; text-align: center;">
+                        <span style="background: {% if page.overall_score >= 8 %}#d1fae5; color: #065f46{% elif page.overall_score >= 5 %}#fef3c7; color: #92400e{% else %}#fee2e2; color: #991b1b{% endif %}; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 500;">Score: {{ page.overall_score }}</span>
+                    </td>
+                    <td style="padding: 16px 8px; vertical-align: top; max-width: 200px;">
+                        <div style="color: #6b7280; font-size: 12px; line-height: 1.4;">{{ page.explanation }}</div>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="6" style="padding: 40px; text-align: center; color: #6b7280; font-style: italic;">
+                        📊 No pages currently score 5-7. Pages are either excellent (8-10) or need critical attention (1-4).
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Excellent Pages -->
+<div style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 24px; margin-bottom: 40px;">
+    <h2 style="font-size: 18px; font-weight: 600; margin-bottom: 8px; color: #10b981;">✅ Excellent Pages (8-10 scores)</h2>
+    <p style="color: #6b7280; font-size: 14px; margin-bottom: 20px;">These pages have excellent SEO optimization and can serve as examples for your other content.</p>
+    
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <th style="text-align: left; padding: 12px 8px; font-weight: 500; color: #6b7280; font-size: 14px;">URL</th>
+                    <th style="text-align: left; padding: 12px 8px; font-weight: 500; color: #6b7280; font-size: 14px;">🏷️ Title</th>
+                    <th style="text-align: left; padding: 12px 8px; font-weight: 500; color: #6b7280; font-size: 14px;">📝 Description</th>
+                    <th style="text-align: left; padding: 12px 8px; font-weight: 500; color: #6b7280; font-size: 14px;">📌 H1</th>
+                    <th style="text-align: left; padding: 12px 8px; font-weight: 500; color: #6b7280; font-size: 14px;">🔗 Coherence</th>
+                    <th style="text-align: left; padding: 12px 8px; font-weight: 500; color: #6b7280; font-size: 14px;">Explanation</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if run.excellent_pages %}
+                {% for page in run.excellent_pages[:5] %}
+                <tr style="border-bottom: 1px solid #f3f4f6;">
+                    <td style="padding: 16px 8px; vertical-align: top; max-width: 200px;">
+                        <a href="{{ page.url }}" target="_blank" style="color: #3b82f6; text-decoration: none; font-size: 13px; word-break: break-all;" title="{{ page.url }}">
+                            {{ page.url[:40] }}{% if page.url|length > 40 %}...{% endif %}
+                        </a>
+                    </td>
+                    <td style="padding: 16px 8px; vertical-align: top; max-width: 250px;">
+                        <div style="color: #111827; font-size: 13px; line-height: 1.4; margin-bottom: 6px;">{{ page.title if page.title else 'No title found' }}</div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="background: {% if page.title_score >= 8 %}#d1fae5; color: #065f46{% elif page.title_score >= 5 %}#fef3c7; color: #92400e{% else %}#fee2e2; color: #991b1b{% endif %}; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 500;">Score: {{ page.title_score }}</span>
+                            <span style="color: #6b7280; font-size: 11px;">{{ page.title|length }} chars</span>
+                        </div>
+                    </td>
+                    <td style="padding: 16px 8px; vertical-align: top; max-width: 250px;">
+                        <div style="color: #111827; font-size: 13px; line-height: 1.4; margin-bottom: 6px;">{{ page.meta_description if page.meta_description else 'No meta description' }}</div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="background: {% if page.description_score >= 8 %}#d1fae5; color: #065f46{% elif page.description_score >= 5 %}#fef3c7; color: #92400e{% else %}#fee2e2; color: #991b1b{% endif %}; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 500;">Score: {{ page.description_score }}</span>
+                            <span style="color: #6b7280; font-size: 11px;">{{ page.meta_description|length if page.meta_description else 0 }} chars</span>
+                        </div>
+                    </td>
+                    <td style="padding: 16px 8px; vertical-align: top; max-width: 200px;">
+                        <div style="color: #111827; font-size: 13px; line-height: 1.4; margin-bottom: 6px;">{{ page.h1_text if page.h1_text else 'No H1 found' }}</div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="background: {% if page.h1_score >= 8 %}#d1fae5; color: #065f46{% elif page.h1_score >= 5 %}#fef3c7; color: #92400e{% else %}#fee2e2; color: #991b1b{% endif %}; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 500;">Score: {{ page.h1_score }}</span>
+                            <span style="color: #6b7280; font-size: 11px;">{{ page.h1_text|length if page.h1_text else 0 }} chars</span>
+                        </div>
+                    </td>
+                    <td style="padding: 16px 8px; vertical-align: top; text-align: center;">
+                        <span style="background: {% if page.overall_score >= 8 %}#d1fae5; color: #065f46{% elif page.overall_score >= 5 %}#fef3c7; color: #92400e{% else %}#fee2e2; color: #991b1b{% endif %}; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 500;">Score: {{ page.overall_score }}</span>
+                    </td>
+                    <td style="padding: 16px 8px; vertical-align: top; max-width: 200px;">
+                        <div style="color: #6b7280; font-size: 12px; line-height: 1.4;">{{ page.explanation }}</div>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="6" style="padding: 40px; text-align: center; color: #6b7280; font-style: italic;">
+                        💪 No pages currently achieve excellent scores (8-10). Focus on optimization to reach this tier!
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- How This Audit Works Section - Moved to bottom -->
+<div id="how-it-works" style="background: #fafafa; border: 1px solid #e5e7eb; border-radius: 8px; padding: 32px; margin-top: 80px; margin-bottom: 40px;">
+    <h2 style="font-size: 24px; font-weight: 600; margin-bottom: 20px; color: #111827; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;">How This Audit Works</h2>
+    
+    <div style="display: grid; gap: 24px; margin-bottom: 24px;">
+        <div>
+            <div style="font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 15px;">Page Discovery & Content Extraction</div>
+            <p style="color: #6b7280; font-size: 14px; line-height: 1.6;">
+                We automatically map your domain to discover the top {{ run.result_count }} pages{% if run.path_filter %} matching "{{ run.path_filter }}" filter{% endif %}. 
+                Each page is then scraped to extract title tags, meta descriptions, and H1 headings for auditing.
+            </p>
+        </div>
+        <div>
+            <div style="font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 15px;">AI-Powered SEO Scoring Methodology</div>
+            <p style="color: #6b7280; font-size: 14px; line-height: 1.6; margin-bottom: 8px;">
+                Our AI infers a likely target search query (2-5 word keyphrase) from your URL structure and content, then evaluates optimization:
+            </p>
+            <ul style="color: #6b7280; font-size: 13px; line-height: 1.5; margin-left: 20px;">
+                <li><strong>Title (1-10):</strong> Length (50-90 chars optimal), keyphrase placement (front-loaded preferred), click appeal</li>
+                <li><strong>Description (1-10):</strong> Length (150-275 chars), call-to-action presence, value proposition clarity</li>
+                <li><strong>H1 (1-10):</strong> Search intent match, user question addressed, specificity to keyphrase</li>
+                <li><strong>Coherence (1-10):</strong> How well all three elements work together to target the same search intent</li>
+            </ul>
+        </div>
+        <div>
+            <div style="font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 15px;">Element Coherence Assessment</div>
+            <p style="color: #6b7280; font-size: 14px; line-height: 1.6;">
+                We evaluate how well your title, description, and H1 work together to support the same search intent and value proposition. 
+                Strong coherence means all elements reinforce each other and match user expectations from the page content.
+            </p>
+        </div>
+    </div>
+    
+    <div style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 6px; padding: 16px;">
+        <div style="font-weight: 600; color: #92400e; margin-bottom: 6px; font-size: 14px;">Public Tool Limitations</div>
+        <p style="color: #92400e; font-size: 13px; line-height: 1.5;">
+            This is a <strong>free public audit tool</strong> designed to be fast and inexpensive while providing useful SEO insights. 
+            It uses keyword targeting simulation based on URL patterns and content context, but is not connected to your actual Google Search Console data. 
+            To optimize these pages with real search query data and generate improved titles and descriptions, connect your Google Search Console account to <strong><a href="https://toptitle.ai" target="_blank" style="color: #92400e;">TopTitle.ai</a></strong> for personalized AI-powered recommendations based on your actual search performance.
+        </p>
+    </div>
+</div>
+
+<!-- JavaScript for copy functionality -->
+<script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        // Change button text temporarily
+        const button = event.target;
+        const originalText = button.textContent;
+        button.textContent = 'Copied!';
+        button.style.background = '#059669';
+        setTimeout(() => {
+            button.textContent = originalText;
+            button.style.background = '#111827';
+        }, 2000);
+    }).catch(function(err) {
+        console.error('Could not copy text: ', err);
+    });
+}
+
+// Show/hide share popup functionality
+function showSharePopup() {
+    document.getElementById('shareButton').style.display = 'none';
+    document.getElementById('sharePopup').style.display = 'block';
+}
+
+function hideSharePopup() {
+    document.getElementById('sharePopup').style.display = 'none';
+    document.getElementById('shareButton').style.display = 'block';
+}
+
+// Social message copy functionality
+document.getElementById('socialMessageBtn').addEventListener('click', function() {
+    const socialMessage = `🔍 Check out this SEO audit of {{ run.result_count }} of 🌐 {{ run.domain }}'s titles, meta descriptions, and h1s. Average scores: 🏷️ Titles {{ "%.1f"|format(run.avg_title or 0) }}/10, 📝 Descriptions {{ "%.1f"|format(run.avg_description or 0) }}/10, 📌 H1s {{ "%.1f"|format(run.avg_h1 or 0) }}/10: {{ request.url }}`;
+    
+    navigator.clipboard.writeText(socialMessage).then(function() {
+        const button = document.getElementById('socialMessageBtn');
+        const originalText = button.textContent;
+        button.textContent = 'Copied!';
+        button.style.background = '#059669';
+        setTimeout(() => {
+            button.textContent = originalText;
+            button.style.background = '#10b981';
+        }, 2000);
+    }).catch(function(err) {
+        console.error('Could not copy text: ', err);
+    });
+});
+</script>
+
+{% endblock %}

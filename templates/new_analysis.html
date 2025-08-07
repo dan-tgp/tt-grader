@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+
+{% block title %}New SEO Audit - TT-Grader{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 40px;">
+    <h1 style="font-size: 32px; font-weight: 700; margin-bottom: 8px; color: #333;"># Run New Audit</h1>
+    <div style="height: 4px; width: 120px; background: #333; margin-bottom: 24px;"></div>
+    <p style="color: #666; font-size: 16px; line-height: 1.6; max-width: 700px;">
+        Audit any website's SEO performance with AI-powered grading. Get detailed insights on page titles, meta descriptions, H1 tags, and overall optimization scores for bulk audit.
+    </p>
+</div>
+
+<div style="margin-bottom: 40px;">
+    <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 8px; color: #333;">Configure Your Audit</h3>
+    <p style="color: #666; font-size: 15px;">Set up your SEO audit parameters. Audit typically takes 2-5 minutes depending on the number of pages.</p>
+</div>
+
+<form id="auditForm" style="max-width: 600px;">
+    <div style="margin-bottom: 24px;">
+        <label for="domain" style="display: block; margin-bottom: 8px; font-weight: 500; color: #333; font-size: 14px;">Domain *</label>
+        <input type="text" id="domain" name="domain" placeholder="example.com" required
+               style="width: 100%; padding: 12px 16px; border: 1px solid #e5e5e5; border-radius: 6px; font-size: 14px; background: white; transition: border-color 0.2s;"
+               onfocus="this.style.borderColor='#666';"
+               onblur="this.style.borderColor='#e5e5e5';">
+        <div style="margin-top: 6px; padding: 8px 12px; background: #f8f9fa; border-radius: 4px; border-left: 3px solid #e5e5e5;">
+            <div style="color: #666; font-size: 12px; line-height: 1.4;">
+                Enter your website domain without http:// or www.<br>
+                Examples: <code style="background: white; padding: 2px 4px; border-radius: 2px; font-size: 11px;">shopify.com</code>, <code style="background: white; padding: 2px 4px; border-radius: 2px; font-size: 11px;">blog.hubspot.com</code>
+            </div>
+        </div>
+    </div>
+    
+    <div style="margin-bottom: 24px;">
+        <label for="target_count" style="display: block; margin-bottom: 8px; font-weight: 500; color: #333; font-size: 14px;">Number of Pages</label>
+        <input type="number" id="target_count" name="target_count" value="100" min="10" max="5000"
+               style="width: 100%; padding: 12px 16px; border: 1px solid #e5e5e5; border-radius: 6px; font-size: 14px; background: white; transition: border-color 0.2s;"
+               onfocus="this.style.borderColor='#666';"
+               onblur="this.style.borderColor='#e5e5e5';">
+        <div style="margin-top: 6px; padding: 8px 12px; background: #f8f9fa; border-radius: 4px; border-left: 3px solid #e5e5e5;">
+            <div style="color: #666; font-size: 12px; line-height: 1.4;">
+                Small sites: Analyze all pages • Medium sites: 100-200 pages • Large sites: 200-500 pages<br>
+                Range: 10-5000 pages • Processing: ~1-2 seconds per page
+            </div>
+        </div>
+    </div>
+    
+    <div style="margin-bottom: 32px;">
+        <label for="path_filter" style="display: block; margin-bottom: 8px; font-weight: 500; color: #333; font-size: 14px;">Path Filter (Optional)</label>
+        <input type="text" id="path_filter" name="path_filter" placeholder="/product/"
+               style="width: 100%; padding: 12px 16px; border: 1px solid #e5e5e5; border-radius: 6px; font-size: 14px; background: white; transition: border-color 0.2s;"
+               onfocus="this.style.borderColor='#666';"
+               onblur="this.style.borderColor='#e5e5e5';">
+        <div style="margin-top: 6px; padding: 8px 12px; background: #f8f9fa; border-radius: 4px; border-left: 3px solid #e5e5e5;">
+            <div style="color: #666; font-size: 12px; line-height: 1.4;">
+                Focus audit on specific URL sections. E-commerce: <code style="background: white; padding: 2px 4px; border-radius: 2px; font-size: 11px;">/product/</code> • Blog: <code style="background: white; padding: 2px 4px; border-radius: 2px; font-size: 11px;">/blog/</code> • Support: <code style="background: white; padding: 2px 4px; border-radius: 2px; font-size: 11px;">/help/</code><br>
+                Leave empty to audit all pages
+            </div>
+        </div>
+    </div>
+    
+    <div style="margin-bottom: 20px;">
+        <button type="submit" class="btn" id="submitButton" style="font-size: 14px; padding: 12px 24px;">
+            <span id="buttonText">Start Audit</span>
+        </button>
+    </div>
+    
+    <!-- Progress indicator - hidden by default -->
+    <div id="progressSection" style="display: none; background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 40px; max-width: 600px;">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+            <div style="width: 20px; height: 20px; border: 2px solid #3b82f6; border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            <h3 style="color: #111827; font-size: 16px; font-weight: 600; margin: 0;">Audit in Progress...</h3>
+        </div>
+        <p style="color: #6b7280; font-size: 14px; margin-bottom: 16px;">This may take a few minutes depending on the number of pages.</p>
+        
+        <!-- Progress bar -->
+        <div style="background: #f3f4f6; height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 8px;">
+            <div id="progressBar" style="background: linear-gradient(90deg, #3b82f6, #2563eb); height: 100%; width: 0%; transition: width 0.3s ease; border-radius: 4px;"></div>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span id="progressText" style="color: #6b7280; font-size: 12px;">Initializing...</span>
+            <span id="progressPercent" style="color: #3b82f6; font-weight: 600; font-size: 12px;">0%</span>
+        </div>
+    </div>
+</form>
+
+<!-- How It Works Section -->
+<div style="background: #f8f9fa; border-radius: 8px; padding: 32px; margin-bottom: 48px; max-width: 800px;">
+    <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 16px; color: #333;">🚀 How It Works</h3>
+    <div style="display: grid; gap: 20px;">
+        <div style="display: flex; gap: 16px; align-items: flex-start;">
+            <div style="background: #333; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; flex-shrink: 0;">1</div>
+            <div>
+                <h4 style="font-weight: 600; color: #333; margin-bottom: 4px;">URL Discovery</h4>
+                <p style="color: #666; font-size: 14px;">We automatically discover all pages on your domain, optionally filtered by path patterns.</p>
+            </div>
+        </div>
+        <div style="display: flex; gap: 16px; align-items: flex-start;">
+            <div style="background: #333; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; flex-shrink: 0;">2</div>
+            <div>
+                <h4 style="font-weight: 600; color: #333; margin-bottom: 4px;">Content Extraction</h4>
+                <p style="color: #666; font-size: 14px;">Each page is automatically scraped to extract titles, descriptions, H1 tags, and content for auditing.</p>
+            </div>
+        </div>
+        <div style="display: flex; gap: 16px; align-items: flex-start;">
+            <div style="background: #333; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; flex-shrink: 0;">3</div>
+            <div>
+                <h4 style="font-weight: 600; color: #333; margin-bottom: 4px;">AI Audit</h4>
+                <p style="color: #666; font-size: 14px;">Our AI model grades each page's SEO elements (1-10) with detailed feedback and optimization suggestions.</p>
+            </div>
+        </div>
+        <div style="display: flex; gap: 16px; align-items: flex-start;">
+            <div style="background: #333; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; flex-shrink: 0;">4</div>
+            <div>
+                <h4 style="font-weight: 600; color: #333; margin-bottom: 4px;">Interactive Dashboard</h4>
+                <p style="color: #666; font-size: 14px;">Get a comprehensive report with scores, charts, and shareable results dashboard for team collaboration.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- What You'll Get Section -->
+<div style="background: #f8f9fa; border-radius: 8px; padding: 32px; margin-bottom: 40px; max-width: 800px;">
+    <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 16px; color: #333;">📊 What You'll Get</h3>
+    <div style="display: grid; gap: 16px;">
+        <div>
+            <h4 style="font-weight: 600; color: #333; margin-bottom: 4px;">Comprehensive SEO Scores (0-10 scale)</h4>
+            <p style="color: #666; font-size: 14px;">Each page receives individual scores for title tags, meta descriptions, H1 headings, and element coherence (how well all SEO elements work together).</p>
+        </div>
+        <div>
+            <h4 style="font-weight: 600; color: #333; margin-bottom: 4px;">Detailed AI Feedback</h4>
+            <p style="color: #666; font-size: 14px;">Specific recommendations for improving each page's SEO, including length optimization, keyword usage, and clarity suggestions.</p>
+        </div>
+        <div>
+            <h4 style="font-weight: 600; color: #333; margin-bottom: 4px;">Interactive Report Dashboard</h4>
+            <p style="color: #666; font-size: 14px;">View results in a comprehensive dashboard with score distribution charts, critical pages tables, and shareable URL for team collaboration.</p>
+        </div>
+        <div>
+            <h4 style="font-weight: 600; color: #333; margin-bottom: 4px;">Performance Insights</h4>
+            <p style="color: #666; font-size: 14px;">Identify your best and worst performing pages, common optimization patterns, and actionable improvement priorities.</p>
+        </div>
+    </div>
+</div>
+    
+<!-- Error message -->
+<div id="error" style="display: none; margin-top: 32px; max-width: 600px;">
+    <div style="background: white; border: 1px solid #ef4444; border-radius: 8px; padding: 20px;">
+        <h3 style="color: #dc2626; font-size: 16px; font-weight: 600; margin-bottom: 8px;">Error</h3>
+        <p id="errorMessage" style="color: #6b7280; font-size: 14px;"></p>
+    </div>
+</div>
+
+<style>
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .form-input:focus {
+        border-color: #667eea !important;
+        box-shadow: 0 4px 12px rgba(102,126,234,0.15) !important;
+        transform: translateY(-1px);
+    }
+</style>
+
+<script>
+document.getElementById('auditForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = {
+        domain: document.getElementById('domain').value,
+        target_count: parseInt(document.getElementById('target_count').value),
+        path_filter: document.getElementById('path_filter').value || null
+    };
+    
+    // Show progress section
+    document.getElementById('progressSection').style.display = 'block';
+    document.getElementById('error').style.display = 'none';
+    
+    const submitButton = document.getElementById('submitButton');
+    const buttonText = document.getElementById('buttonText');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    const progressPercent = document.getElementById('progressPercent');
+    
+    submitButton.disabled = true;
+    submitButton.style.opacity = '0.6';
+    submitButton.style.cursor = 'not-allowed';
+    buttonText.textContent = 'Auditing...';
+    
+    // More realistic progress simulation based on actual process stages
+    let progress = 0;
+    let currentStage = 0;
+    const startTime = Date.now();
+    
+    // Estimate total time based on number of pages (roughly 2-3 seconds per page)
+    const estimatedTotalTime = Math.max(30, formData.target_count * 2.5) * 1000; // milliseconds
+    
+    // Stage timing (as percentage of total time)
+    const stages = [
+        { name: 'Discovering URLs...', start: 0, end: 15, duration: 0.15 },
+        { name: 'Scraping page content...', start: 15, end: 60, duration: 0.45 },
+        { name: 'Analyzing SEO elements with AI...', start: 60, end: 90, duration: 0.30 },
+        { name: 'Saving results to database...', start: 90, end: 95, duration: 0.10 }
+    ];
+    
+    const progressInterval = setInterval(() => {
+        const elapsedTime = Date.now() - startTime;
+        const timeProgress = Math.min(95, (elapsedTime / estimatedTotalTime) * 100);
+        
+        // Find current stage based on elapsed time
+        const timeRatio = elapsedTime / estimatedTotalTime;
+        let stageIndex = 0;
+        let cumulativeTime = 0;
+        
+        for (let i = 0; i < stages.length; i++) {
+            cumulativeTime += stages[i].duration;
+            if (timeRatio <= cumulativeTime) {
+                stageIndex = i;
+                break;
+            }
+        }
+        
+        if (stageIndex !== currentStage) {
+            currentStage = stageIndex;
+        }
+        
+        // Smooth progress within current stage
+        const currentStageData = stages[currentStage];
+        const stageStartTime = stages.slice(0, currentStage).reduce((sum, stage) => sum + stage.duration, 0) * estimatedTotalTime;
+        const stageElapsed = elapsedTime - stageStartTime;
+        const stageDuration = currentStageData.duration * estimatedTotalTime;
+        const stageProgress = Math.min(1, stageElapsed / stageDuration);
+        
+        // Calculate progress within the stage range
+        const stageRange = currentStageData.end - currentStageData.start;
+        progress = currentStageData.start + (stageRange * stageProgress);
+        
+        // Cap at 95% until we get the actual response
+        progress = Math.min(95, progress);
+        
+        progressBar.style.width = progress + '%';
+        progressPercent.textContent = Math.round(progress) + '%';
+        progressText.textContent = currentStageData.name;
+    }, 500); // Update every 500ms for smoother animation
+    
+    try {
+        const response = await fetch('/api/run', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            // Complete the progress bar
+            clearInterval(progressInterval);
+            progressBar.style.width = '100%';
+            progressPercent.textContent = '100%';
+            progressText.textContent = 'Complete! Redirecting...';
+            
+            // Redirect to results page after a brief delay
+            setTimeout(() => {
+                window.location.href = `/grader/${data.hash}`;
+            }, 500);
+        } else {
+            throw new Error(data.error || 'Audit failed');
+        }
+    } catch (error) {
+        clearInterval(progressInterval);
+        document.getElementById('progressSection').style.display = 'none';
+        document.getElementById('error').style.display = 'block';
+        document.getElementById('errorMessage').textContent = error.message;
+        
+        // Reset button state
+        submitButton.disabled = false;
+        submitButton.style.opacity = '1';
+        submitButton.style.cursor = 'pointer';
+        buttonText.textContent = 'Start Audit';
+    }
+});
+</script>
+{% endblock %}

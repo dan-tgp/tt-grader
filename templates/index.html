@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}TT-Grader Dashboard{% endblock %}
+
+{% block content %}
+
+<!-- Hero Section - TopTitle.ai style -->
+<div style="margin-bottom: 60px; background: #fafafa; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+    <div style="padding: 48px 32px; text-align: center;">
+        <h1 style="font-size: 36px; font-weight: 700; margin-bottom: 16px; color: #111827; letter-spacing: -0.025em; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;">
+            TITLE, DESCRIPTION, & H1 SEO AUDIT
+        </h1>
+        <p style="font-size: 18px; margin-bottom: 32px; color: #6b7280; max-width: 600px; margin-left: auto; margin-right: auto; line-height: 1.6;">
+            a free resource from <span style="color: #111827; font-weight: 600;">TOP&lt;TITLE&gt;</span>
+        </p>
+        
+        <!-- Dashboard Preview Image -->
+        <div style="margin-bottom: 32px; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 800px; margin-left: auto; margin-right: auto; border: 1px solid #e5e7eb;">
+            <img src="{{ url_for('static', filename='hero-dashboard.png') }}" 
+                 alt="SEO Audit Dashboard Preview" 
+                 style="width: 100%; height: auto; display: block;">
+        </div>
+        
+        <div>
+            <a href="/new" style="background: #111827; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-size: 16px; font-weight: 500; display: inline-block; transition: all 0.2s; border: none;" onmouseover="this.style.background='#374151'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'" onmouseout="this.style.background='#111827'; this.style.boxShadow='none'">
+                Run Free Audit
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Audits Section -->
+{% if not runs %}
+<div style="text-align: center; margin-bottom: 80px; padding: 40px; background: #fafafa; border: 1px solid #e5e7eb; border-radius: 8px;">
+    <h2 style="font-size: 24px; font-weight: 600; margin-bottom: 12px; color: #111827;">No audits yet</h2>
+    <p style="color: #6b7280; font-size: 16px; margin-bottom: 24px;">Get started by running your first SEO audit</p>
+    <a href="/new" style="background: #111827; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-size: 16px; font-weight: 500; display: inline-block; transition: all 0.2s;" onmouseover="this.style.background='#374151'" onmouseout="this.style.background='#111827'">
+        Create Your First Audit
+    </a>
+</div>
+{% else %}
+<div style="margin-bottom: 40px;">
+    <h2 style="font-size: 24px; font-weight: 600; margin-bottom: 8px; color: #111827; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;">Recent Audits</h2>
+    <p style="color: #6b7280; font-size: 14px; margin-bottom: 24px;">Click any audit to view detailed results and get a shareable link</p>
+    
+    <div style="margin-bottom: 24px;">
+        <a href="/new" style="background: #111827; color: white; text-decoration: none; padding: 10px 20px; border-radius: 6px; font-size: 14px; font-weight: 500; display: inline-block; transition: all 0.2s;" onmouseover="this.style.background='#374151'" onmouseout="this.style.background='#111827'">
+            + New Audit
+        </a>
+    </div>
+    
+    <!-- Runs List -->
+    <div style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+        <div style="display: grid; grid-template-columns: 1fr; gap: 0;">
+            {% for run in runs %}
+            <div style="padding: 20px; border-bottom: 1px solid #f3f4f6; display: grid; grid-template-columns: auto 1fr auto auto auto auto auto auto; gap: 16px; align-items: center; {% if loop.last %}border-bottom: none;{% endif %}">
+                <!-- Domain with favicon -->
+                <div style="display: flex; align-items: center; gap: 8px; min-width: 180px;">
+                    <img src="https://www.google.com/s2/favicons?domain={{ run.domain }}&sz=16" 
+                         alt="{{ run.domain }} favicon" 
+                         style="width: 16px; height: 16px; border-radius: 2px;"
+                         onerror="this.style.display='none'">
+                    <div>
+                        <div style="font-weight: 600; color: #111827; font-size: 14px;">{{ run.domain }}</div>
+                        <div style="color: #6b7280; font-size: 12px;">{{ run.path_filter or 'All pages' }}</div>
+                    </div>
+                </div>
+                
+                <!-- Pages count -->
+                <div style="text-align: center; min-width: 60px;">
+                    <div style="color: #111827; font-weight: 600; font-size: 14px;">{{ run.result_count }}</div>
+                    <div style="color: #6b7280; font-size: 12px;">pages</div>
+                </div>
+                
+                <!-- Title Score -->
+                <div style="text-align: center; min-width: 60px;">
+                    <div style="color: {% if run.avg_title and run.avg_title >= 8 %}#10b981{% elif run.avg_title and run.avg_title >= 5 %}#f59e0b{% elif run.avg_title %}#ef4444{% else %}#6b7280{% endif %}; font-weight: 600; font-size: 14px;">{{ "%.1f"|format(run.avg_title) if run.avg_title else "N/A" }}</div>
+                    <div style="color: #6b7280; font-size: 12px;">title</div>
+                </div>
+                
+                <!-- Description Score -->
+                <div style="text-align: center; min-width: 60px;">
+                    <div style="color: {% if run.avg_description and run.avg_description >= 8 %}#10b981{% elif run.avg_description and run.avg_description >= 5 %}#f59e0b{% elif run.avg_description %}#ef4444{% else %}#6b7280{% endif %}; font-weight: 600; font-size: 14px;">{{ "%.1f"|format(run.avg_description) if run.avg_description else "N/A" }}</div>
+                    <div style="color: #6b7280; font-size: 12px;">desc</div>
+                </div>
+                
+                <!-- H1 Score -->
+                <div style="text-align: center; min-width: 60px;">
+                    <div style="color: {% if run.avg_h1 and run.avg_h1 >= 8 %}#10b981{% elif run.avg_h1 and run.avg_h1 >= 5 %}#f59e0b{% elif run.avg_h1 %}#ef4444{% else %}#6b7280{% endif %}; font-weight: 600; font-size: 14px;">{{ "%.1f"|format(run.avg_h1) if run.avg_h1 else "N/A" }}</div>
+                    <div style="color: #6b7280; font-size: 12px;">H1</div>
+                </div>
+                
+                <!-- Coherence Score -->
+                <div style="text-align: center; min-width: 60px;">
+                    <div style="color: {% if run.avg_overall and run.avg_overall >= 8 %}#10b981{% elif run.avg_overall and run.avg_overall >= 5 %}#f59e0b{% elif run.avg_overall %}#ef4444{% else %}#6b7280{% endif %}; font-weight: 600; font-size: 14px;">{{ "%.1f"|format(run.avg_overall) if run.avg_overall else "N/A" }}</div>
+                    <div style="color: #6b7280; font-size: 12px;">coherence</div>
+                </div>
+                
+                <!-- Date -->
+                <div style="text-align: center; min-width: 100px;">
+                    <div style="color: #6b7280; font-size: 12px;">{{ run.created_at[:10] if run.created_at else 'Unknown' }}</div>
+                </div>
+                
+                <!-- Actions -->
+                <div>
+                    <a href="/grader/{{ run.hash }}" style="background: #111827; color: white; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 500; display: inline-block; transition: all 0.2s;" onmouseover="this.style.background='#374151'" onmouseout="this.style.background='#111827'">
+                        View Details
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <div style="margin-top: 24px; text-align: center;">
+        <p style="color: #6b7280; font-size: 14px; margin-bottom: 16px;">
+            Curious about the methodology? <a href="#how-it-works" style="color: #111827; text-decoration: underline;">Learn how this audit works</a>
+        </p>
+    </div>
+</div>
+{% endif %}
+
+<!-- How This Audit Works Section - Moved to bottom -->
+<div id="how-it-works" style="background: #fafafa; border: 1px solid #e5e7eb; border-radius: 8px; padding: 32px; margin-top: 80px;">
+    <h2 style="font-size: 24px; font-weight: 600; margin-bottom: 20px; color: #111827; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;">How This Audit Works</h2>
+    
+    <div style="display: grid; gap: 24px; margin-bottom: 24px;">
+        <div>
+            <div style="font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 15px;">Page Discovery & Content Extraction</div>
+            <p style="color: #6b7280; font-size: 14px; line-height: 1.6;">
+                We automatically map your domain to discover pages. Each page is then scraped to extract title tags, meta descriptions, and H1 headings for auditing.
+            </p>
+        </div>
+        <div>
+            <div style="font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 15px;">AI-Powered SEO Scoring Methodology</div>
+            <p style="color: #6b7280; font-size: 14px; line-height: 1.6; margin-bottom: 8px;">
+                Our AI infers a likely target search query (2-5 word keyphrase) from your URL structure and content, then evaluates optimization:
+            </p>
+            <ul style="color: #6b7280; font-size: 13px; line-height: 1.5; margin-left: 20px;">
+                <li><strong>Title (1-10):</strong> Length (50-90 chars optimal), keyphrase placement (front-loaded preferred), click appeal</li>
+                <li><strong>Description (1-10):</strong> Length (150-275 chars), call-to-action presence, value proposition clarity</li>
+                <li><strong>H1 (1-10):</strong> Search intent match, user question addressed, specificity to keyphrase</li>
+                <li><strong>Coherence (1-10):</strong> How well all three elements work together to target the same search intent</li>
+            </ul>
+        </div>
+        <div>
+            <div style="font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 15px;">Element Coherence Assessment</div>
+            <p style="color: #6b7280; font-size: 14px; line-height: 1.6;">
+                We evaluate how well your title, description, and H1 work together to support the same search intent and value proposition. 
+                Strong coherence means all elements reinforce each other and match user expectations from the page content.
+            </p>
+        </div>
+    </div>
+    
+    <div style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 6px; padding: 16px;">
+        <div style="font-weight: 600; color: #92400e; margin-bottom: 6px; font-size: 14px;">Public Tool Limitations</div>
+        <p style="color: #92400e; font-size: 13px; line-height: 1.5;">
+            This is a <strong>free public audit tool</strong> designed to be fast and inexpensive while providing useful SEO insights. 
+            It uses keyword targeting simulation based on URL patterns and content context, but is not connected to your actual Google Search Console data. 
+            To optimize these pages with real search query data and generate improved titles and descriptions, connect your Google Search Console account to <strong><a href="https://toptitle.ai" target="_blank" style="color: #92400e;">TopTitle.ai</a></strong> for personalized AI-powered recommendations based on your actual search performance.
+        </p>
+    </div>
+</div>
+
+{% endblock %}
