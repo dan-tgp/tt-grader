@@ -8,15 +8,17 @@ This is a Python-based SEO analysis tool that scrapes websites and provides LLM-
 
 - ScrapingBee API for web scraping
 - Firecrawl API for URL discovery via domain mapping  
-- OpenAI GPT-4o Mini for SEO scoring and analysis
+- OpenAI GPT-5 Mini for SEO scoring and analysis (upgraded from GPT-4o Mini)
 - Async/concurrent processing for high-performance scraping
 
 ## Core Architecture
 
 ### Main Components
 
-- `real_time_seo_grader.py` - Main application script with interactive CLI interface
-- `output_formatter.py` - Results display and statistics formatting module
+- `web_app.py` - Flask web application with interactive dashboard
+- `tt_grader_with_db.py` - Core SEO grader with database storage
+- `templates/` - HTML templates for web interface
+- `static/` - Static assets (images, CSS)
 - `output/` - Directory containing CSV results and analysis files
 - `.env` - API keys configuration (ScrapingBee, Firecrawl, OpenAI)
 
@@ -24,7 +26,7 @@ This is a Python-based SEO analysis tool that scrapes websites and provides LLM-
 
 - `PageResult` dataclass - Structured data for page scraping and grading results
 - `RealTimeCSVWriter` - Streams results to CSV as they are processed
-- `batch_grade_with_llm()` - Batches multiple pages for efficient LLM grading
+- `batch_grade()` - Batches multiple pages for efficient GPT-5 Mini grading
 - `scrape_single_url()` - Handles individual URL scraping with ScrapingBee
 - `get_domain_urls()` - URL discovery using Firecrawl mapping endpoint
 

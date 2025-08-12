@@ -8,8 +8,8 @@ aiohttp==3.9.1
 # HTTP client for Firecrawl API
 requests==2.31.0
 
-# OpenAI SDK for LLM grading
-openai==1.6.1
+# OpenAI SDK for LLM grading (updated for GPT-5 support)
+openai==1.55.0
 
 # Python version requirement
 # Python 3.7+
