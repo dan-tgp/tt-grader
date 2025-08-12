@@ -3,10 +3,11 @@
 TT-GRADER WITH DATABASE - SEO grader with persistent storage
 Stores all runs and results in SQLite database for analysis
 
-UPDATED: Now using GPT-5 mini for enhanced SEO analysis
-- Model: gpt-5-mini (faster, more accurate than GPT-4o mini)
+UPDATED: Now using GPT-5 Nano for cost-effective SEO analysis
+- Model: gpt-5-nano (80% cheaper than GPT-5 mini, 67% cheaper than GPT-4o mini)
 - New features: reasoning_effort and verbosity parameters
-- Better factual accuracy and reduced hallucination
+- Better accuracy than GPT-4o with ~45% fewer errors
+- Ultra-fast response times for high-volume processing
 """
 
 import asyncio
@@ -481,7 +482,7 @@ Return JSON: {"results":[{"i":0,"t":6,"d":4,"h":7,"o":5,"e":"Title strong but me
         openai_client = AsyncOpenAI(api_key=OPENAI_API_KEY)
         
         response = await openai_client.chat.completions.create(
-            model="gpt-5-mini",
+            model="gpt-5-nano",
             messages=[
                 {"role": "system", "content": system_message},
                 {"role": "user", "content": user_message}
@@ -493,7 +494,7 @@ Return JSON: {"results":[{"i":0,"t":6,"d":4,"h":7,"o":5,"e":"Title strong but me
             max_tokens=4000,
             temperature=0.1,
             reasoning_effort="minimal",  # GPT-5 parameter for faster responses
-            verbosity="medium"  # GPT-5 parameter for balanced response length
+            verbosity="low"  # GPT-5 parameter - using "low" for nano to keep responses concise
         )
         
         batch_data = json.loads(response.choices[0].message.content)
