@@ -1,8 +1,9 @@
-# Python
+# Dependencies
+node_modules/
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
+*.pyc
+*.pyo
+*.pyd
 .Python
 build/
 develop-eggs/
@@ -16,51 +17,37 @@ parts/
 sdist/
 var/
 wheels/
-share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-MANIFEST
 
-# Environment variables
+# Environment
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Virtual environments
-venv/
+.venv
 env/
+venv/
 ENV/
 env.bak/
 venv.bak/
 
-# IDE
+# Output and data
+output/
+visualizations/
+*.db
+*.csv
+
+# IDE and system files
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
-
-# OS
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
+.claude/
 
-# Output files (keep directory but ignore contents)
-output/*.csv
-output/*.json
-output/*.txt
-!output/.gitkeep
-
-# Test files
-simple_test.py
-test_chairish.py
-
-# Logs
+# Temporary files
+temp_*.html
+nul
 *.log
+*.tmp
