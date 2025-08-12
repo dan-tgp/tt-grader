@@ -482,26 +482,22 @@ Return JSON: {"results":[{"i":0,"t":6,"d":4,"h":7,"o":5,"e":"Title strong but me
         
         openai_client = AsyncOpenAI(api_key=OPENAI_API_KEY)
         
-        # GPT-5 models use the Responses API instead of Chat Completions
-        response = await openai_client.responses.create(
+        # GPT-5 nano with Chat Completions API (minimal parameters for compatibility)
+        response = await openai_client.chat.completions.create(
             model="gpt-5-nano",
-            input=f"{system_message}\n\n{user_message}",
-            reasoning={
-                "effort": "minimal"  # GPT-5 parameter for faster responses
-            },
-            text={
-                "verbosity": "low"  # GPT-5 parameter for concise responses
-            },
+            messages=[
+                {"role": "system", "content": system_message},
+                {"role": "user", "content": user_message}
+            ],
             response_format={
                 "type": "json_schema", 
                 "json_schema": {"name": "batch_seo", "schema": json_schema}
             },
-            max_tokens=4000,
-            temperature=0.1
+            max_completion_tokens=4000  # GPT-5 nano only supports default temperature (1.0)
         )
         
-        # GPT-5 Responses API returns content in a different structure
-        batch_data = json.loads(response.text.content)
+        # Standard Chat Completions response format
+        batch_data = json.loads(response.choices[0].message.content)
         score_map = {score['i']: score for score in batch_data.get('results', [])}
         
         for i, result in enumerate(gradeable_results):
